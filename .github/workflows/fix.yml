@@ -15,7 +15,7 @@ jobs:
       - name: Blender
         run: |
           sudo apt-get -qq update && sudo apt-get -qq install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 libxkbcommon0 ffmpeg >/dev/null
-          for i in 1 2 3 4 5; do curl -fsSL --retry 5 -o b.tar.xz https://download.blender.org/release/Blender4.3/blender-4.3.2-linux-x64.tar.xz && tar xJf b.tar.xz && break; sleep 20; done
+          P=Blender4.3/blender-4.3.2-linux-x64.tar.xz; for u in https://mirrors.ocf.berkeley.edu/blender/release/$P https://ftp.nluug.nl/pub/graphics/blender/release/$P https://mirror.clarkson.edu/blender/release/$P https://ftp.halifax.rwth-aachen.de/blender/release/$P https://download.blender.org/release/$P; do curl -fsSL --retry 3 -o b.tar.xz $u && tar xJf b.tar.xz && break; sleep 5; done
           mv blender-4.3.2-linux-x64 bl
       - name: Render
         env:
