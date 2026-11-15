@@ -1,0 +1,32 @@
+name: fix
+on:
+  push:
+    branches: [main]
+    paths: ['fix.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blender
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 libxkbcommon0 ffmpeg >/dev/null
+          for i in 1 2 3 4 5; do curl -fsSL --retry 5 -o b.tar.xz https://download.blender.org/release/Blender4.3/blender-4.3.2-linux-x64.tar.xz && tar xJf b.tar.xz && break; sleep 20; done
+          mv blender-4.3.2-linux-x64 bl
+      - name: Render
+        env:
+          HQ_W: '1080'
+          HQ_H: '1920'
+          HQ_DENOISE: '1'
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          export HQ_SAMPLES=$(cat samples.txt)
+          C=$(cat fix.txt)
+          A=$((C*55)); B=$((A+54)); [ $B -gt 1091 ] && B=1091
+          ./bl/blender -b --factory-startup --python build.py -- frames out $A $B 2>&1 | grep -E "FRAME|Error|Traceback|rror" || true
+          ffmpeg -v error -framerate 30 -start_number $A -i out/f_%04d.png -frames:v $((B-A+1)) -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p chunk_$(printf %02d $C).mp4
+          gh release create fix-${{ github.run_id }} chunk_*.mp4 --repo ${{ github.repository }} --title "fix chunk $C" --notes "chunk fix"
