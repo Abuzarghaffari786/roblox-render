@@ -25,7 +25,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           export HQ_SAMPLES=$(cat samples.txt)
-          C=$(cat fix.txt)
+          C=$(tr -dc 0-9 < fix.txt)
           A=$((C*55)); B=$((A+54)); [ $B -gt 1091 ] && B=1091
           ./bl/blender -b --factory-startup --python build.py -- frames out $A $B 2>&1 | grep -E "FRAME|Error|Traceback|rror" || true
           ffmpeg -v error -framerate 30 -start_number $A -i out/f_%04d.png -frames:v $((B-A+1)) -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p chunk_$(printf %02d $C).mp4
