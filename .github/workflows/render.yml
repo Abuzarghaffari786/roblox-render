@@ -1,0 +1,53 @@
+name: render
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/render.yml', 'go.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        chunk: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blender
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 libxkbcommon0 ffmpeg >/dev/null
+          curl -sL https://download.blender.org/release/Blender4.3/blender-4.3.2-linux-x64.tar.xz | tar xJ
+          mv blender-4.3.2-linux-x64 bl
+      - name: Render
+        env:
+          HQ_W: '1080'
+          HQ_H: '1920'
+          HQ_DENOISE: '1'
+        run: |
+          export HQ_SAMPLES=$(cat samples.txt)
+          C=${{ matrix.chunk }}
+          A=$((C*55)); B=$((A+54)); [ $B -gt 1091 ] && B=1091
+          ./bl/blender -b --factory-startup --python build.py -- frames out $A $B 2>&1 | grep -E "FRAME|Error|Traceback|rror" || true
+          ffmpeg -v error -framerate 30 -start_number $A -i out/f_%04d.png -frames:v $((B-A+1)) -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p chunk_$(printf %02d $C).mp4
+          ls -la chunk_*.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunk-${{ matrix.chunk }}
+          path: chunk_*.mp4
+          retention-days: 3
+  publish:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dl, merge-multiple: true}
+      - name: Release
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          ls -la dl
+          gh release create run-${{ github.run_id }} dl/*.mp4 --repo ${{ github.repository }} --title "render ${{ github.run_id }}" --notes "chunks"
