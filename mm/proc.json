@@ -1,0 +1,137 @@
+[
+ {
+  "i": 1,
+  "who": "SKY",
+  "start": 0.2,
+  "text": "Free mermaid tails! One for every bestie!",
+  "dur": 2.089,
+  "tempo": 1.59,
+  "over": 0.01
+ },
+ {
+  "i": 2,
+  "who": "RUBY",
+  "start": 2.35,
+  "text": "Mine! Pink is my whole personality.",
+  "dur": 2.322,
+  "tempo": 1.16,
+  "over": -0.01
+ },
+ {
+  "i": 3,
+  "who": "MAX",
+  "start": 4.75,
+  "text": "Purple. Obviously. I'm royalty.",
+  "dur": 2.551,
+  "tempo": 1.1,
+  "over": -0.63
+ },
+ {
+  "i": 4,
+  "who": "NAINA",
+  "start": 8.0,
+  "text": "Baby pink! I'm officially a mermaid.",
+  "dur": 2.359,
+  "tempo": 1.15,
+  "over": -0.57
+ },
+ {
+  "i": 5,
+  "who": "RUBY",
+  "start": 11.0,
+  "text": "Look at us. Ocean queens.",
+  "dur": 1.508,
+  "tempo": 1.15,
+  "over": -0.62
+ },
+ {
+  "i": 6,
+  "who": "MAX",
+  "start": 13.2,
+  "text": "Wait. How do mermaids even walk? I'm out.",
+  "dur": 3.056,
+  "tempo": 1.1,
+  "over": -1.27
+ },
+ {
+  "i": 7,
+  "who": "NAINA",
+  "start": 17.6,
+  "text": "It's itchy! So itchy!",
+  "dur": 1.752,
+  "tempo": 1.15,
+  "over": -3.78
+ },
+ {
+  "i": 8,
+  "who": "RUBY",
+  "start": 23.2,
+  "text": "Fine. It was too tight anyway.",
+  "dur": 1.923,
+  "tempo": 1.15,
+  "over": -2.91
+ },
+ {
+  "i": 9,
+  "who": "SKY",
+  "start": 28.1,
+  "text": "They left me. Alone. In the ocean.",
+  "dur": 2.424,
+  "tempo": 1.16,
+  "over": -0.01
+ },
+ {
+  "i": 10,
+  "who": "RUBY",
+  "start": 30.6,
+  "text": "Why is she staring at us like that?",
+  "dur": 1.407,
+  "tempo": 1.15,
+  "over": -0.32
+ },
+ {
+  "i": 11,
+  "who": "SKY",
+  "start": 32.4,
+  "text": "Even my doll stayed loyal! Unlike some people!",
+  "dur": 2.425,
+  "tempo": 1.21,
+  "over": -0.01
+ },
+ {
+  "i": 12,
+  "who": "NAINA",
+  "start": 34.9,
+  "text": "Okay, that one hurt.",
+  "dur": 1.02,
+  "tempo": 1.18,
+  "over": -0.01
+ },
+ {
+  "i": 13,
+  "who": "MAX",
+  "start": 36.0,
+  "text": "Guilt trip activated.",
+  "dur": 1.234,
+  "tempo": 1.1,
+  "over": -0.2
+ },
+ {
+  "i": 14,
+  "who": "RUBY",
+  "start": 37.5,
+  "text": "Fine! Tails back on!",
+  "dur": 1.159,
+  "tempo": 1.15,
+  "over": -0.87
+ },
+ {
+  "i": 15,
+  "who": "SKY",
+  "start": 39.6,
+  "text": "Mermaid squad forever!",
+  "dur": 1.095,
+  "tempo": 1.15,
+  "over": -1.83
+ }
+]

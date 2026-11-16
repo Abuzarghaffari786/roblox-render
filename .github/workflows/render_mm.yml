@@ -1,0 +1,63 @@
+name: render-mm
+on:
+  push:
+    branches: [main]
+    paths: ['mm/go.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      m: ${{ steps.m.outputs.m }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: echo "m=$(cat mm/chunks.txt)" >> $GITHUB_OUTPUT
+  render:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        chunk: ${{ fromJson(needs.setup.outputs.m) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Blender
+        run: |
+          sudo apt-get -qq update && sudo apt-get -qq install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 libxkbcommon0 ffmpeg >/dev/null
+          P=Blender4.3/blender-4.3.2-linux-x64.tar.xz; for u in https://mirrors.ocf.berkeley.edu/blender/release/$P https://ftp.nluug.nl/pub/graphics/blender/release/$P https://mirror.clarkson.edu/blender/release/$P https://ftp.halifax.rwth-aachen.de/blender/release/$P https://download.blender.org/release/$P; do curl -fsSL --retry 3 -o b.tar.xz $u && tar xJf b.tar.xz && break; sleep 5; done
+          mv blender-4.3.2-linux-x64 bl
+      - name: Render
+        env:
+          HQ_W: '1080'
+          HQ_H: '1920'
+          HQ_DENOISE: '1'
+          HQ_SAMPLES: '16'
+        run: |
+          C=${{ matrix.chunk }}
+          A=$((C*55)); B=$((A+54)); [ $B -gt 1273 ] && B=1273
+          cd mm
+          ../bl/blender -b --factory-startup --python build.py -- frames out $A $B 2>&1 | grep -E "FRAME|Error|Traceback|rror" || true
+          ffmpeg -v error -framerate 30 -start_number $A -i out/f_%04d.png -frames:v $((B-A+1)) -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p ../chunk_$(printf %02d $C).mp4
+          ls -la ../chunk_*.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunk-${{ matrix.chunk }}
+          path: chunk_*.mp4
+          retention-days: 3
+  publish:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dl, merge-multiple: true}
+      - name: Release
+        env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          ls -la dl
+          gh release create mm-${{ github.run_id }} dl/*.mp4 --repo ${{ github.repository }} --title "mm ${{ github.run_id }}" --notes "chunks"
