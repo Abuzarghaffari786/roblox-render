@@ -237,10 +237,14 @@ def fish(name):
     return r
 FISH = fish('fish'); FISH2 = fish('fish2'); FS = 0.55
 
-IC = empty('icecream', MIA.root)  # reparented below
-IC.parent = LILY.sh['armR']; IC.location = (0, -0.2, -2.45)
+IC = empty('icecream', LILY.body, (0.38, -1.15, 1.95)); IC.rotation_euler = (R(-22), R(-22), 0)
 prim('cone', 'ic_cone', mat('#D9A55B'), IC, (0, 0, 0), (1, 1, 1), (R(180), 0, 0), vertices=16, radius1=0.38, depth=1.0)
-prim('uv_sphere', 'ic_ball', mat('#FF9CC8', 0.5), IC, (0, 0, 0.6), (0.48, 0.48, 0.45), segments=20, ring_count=10)
+ICBALL = prim('uv_sphere', 'ic_ball', mat('#FF9CC8', 0.5), IC, (0, 0, 0.6), (0.48, 0.48, 0.45), segments=20, ring_count=10)
+BOT = empty('bottle', LILY.body, (0, 0, 0))
+prim('cylinder', 'bot_b', mat('#9FDcFF', 0.12, 0, 0.6), BOT, (0, 0, 0.72), (1, 1, 1), (0, 0, 0), vertices=24, radius=0.26, depth=1.05)
+prim('cylinder', 'bot_w', mat('#3FA2F0', 0.15, 0, 0.8), BOT, (0, 0, 0.55), (1, 1, 1), (0, 0, 0), vertices=24, radius=0.22, depth=0.6)
+prim('cylinder', 'bot_n', mat('#BDE6FF', 0.15, 0, 0.7), BOT, (0, 0, 0.12), (1, 1, 1), (0, 0, 0), vertices=16, radius=0.13, depth=0.24)
+prim('cylinder', 'bot_c', mat('#1E6FD9', 0.3), BOT, (0, 0, -0.02), (1, 1, 1), (0, 0, 0), vertices=16, radius=0.14, depth=0.08)
 JUG = empty('jug'); JUG.parent = LILY.sh['armR']; JUG.location = (-1.4, 0, -2.6)
 prim('cylinder', 'jug_b', mat('#8FD0FF', 0.15, 0, 0.75), JUG, (0, 0, 0), (1, 1, 1), (0, R(90), 0), vertices=24, radius=0.95, depth=2.6)
 prim('cylinder', 'jug_n', mat('#5BB8FF', 0.2), JUG, (-1.6, 0, 0), (1, 1, 1), (0, R(90), 0), vertices=16, radius=0.35, depth=0.7)
@@ -316,7 +320,8 @@ P = {
  'fishhold': dict(armL=(R(-62), 0, R(4)), armR=(R(-62), 0, R(-4))),
  'bite':   dict(armL=(R(-97), 0, R(4)), armR=(R(-97), 0, R(-4)), head=(R(-4), 0, 0), body=(R(-3), 0, 0)),
  'choke':  dict(armL=(R(-150), 0, R(38)), armR=(R(-150), 0, R(-38)), head=(R(14), 0, 0), body=(R(4), 0, 0)),
- 'icecream': dict(armL=(R(-140), 0, R(35)), armR=(R(-158), 0, R(-22)), head=(R(-5), 0, 0)),
+ 'icecream': dict(armL=(R(-55), 0, R(8)), armR=(R(-85), 0, R(-22)), head=(R(-3), 0, 0)),
+ 'bottle': dict(armL=(R(-30), 0, R(6)), armR=(R(-150), 0, R(-22)), head=(R(-24), 0, 0), body=(R(-5), 0, 0)),
  'jug':    dict(armL=(R(-172), 0, R(10)), armR=(R(-172), 0, R(-10)), head=(R(28), 0, 0), body=(R(10), 0, 0)),
  'reach':  dict(armL=(R(-150), 0, R(38)), armR=(R(-90), 0, R(70)), head=(0, 0, R(-20)), body=(0, 0, R(-8))),
  'hero':   dict(armL=(R(-8), R(30), 0), armR=(R(-8), R(-30), 0), head=(R(-6), 0, 0), body=(R(-5), 0, 0), legL=(0, R(8), 0), legR=(0, R(-8), 0)),
@@ -336,9 +341,9 @@ def pose_vals(name):
 
 # timelines: (time, pose, face, headturn_z)
 LILY_TL = [(0, 'fishhold', 'smile', 0), (0.90, 'bite', 'eat', 0), (2.20, 'choke', 'choke', 0), (4.30, 'choke', 'scared', 0),
-    (5.15, 'icecream', 'determined', 0), (6.00, 'choke', 'choke', 0), (8.65, 'jug', 'determined', 0), (9.85, 'choke', 'choke', 0),
+    (5.15, 'icecream', 'determined', 0), (5.55, 'icecream', 'eat', 0), (6.00, 'choke', 'choke', 0), (8.65, 'bottle', 'eat', 0), (9.85, 'choke', 'choke', 0),
     (12.30, 'reach', 'shock', 0), (13.90, 'choke', 'choke', 0), (21.75, 'idle', 'scared', R(28)),
-    (23.20, 'openwide', 'openwide', 0), (25.0, 'choke', 'choke', 0), (29.50, 'cough', 'shock', 0), (31.4, 'idle', 'smile', 0),
+    (23.20, 'openwide', 'openwide', 0), (25.0, 'choke', 'choke', 0), (29.50, 'cough', 'shock', 0), (31.4, 'openwide', 'openwide', 0), (31.95, 'idle', 'smile', 0),
     (32.05, 'cheer', 'happy', 0), (33.00, 'idle', 'smile', R(25)), (34.55, 'point', 'happy', R(-15))]
 MIA_TL = [(0, 'hold', 'smile', 0), (14.68, 'hero', 'determined', 0), (16.15, 'drink', 'eat', 0), (18.25, 'idle', 'shock', 0),
     (20.55, 'jumpup', 'happy', 0), (21.70, 'idle', 'smile', R(-30)), (23.25, 'jumpup', 'determined', 0),
@@ -393,7 +398,7 @@ SH = [
  (28.33, 30.10, (TX, -4.5, 4.8), (TX, 8, 4.6), 48, 1.0, None),
  (30.10, 30.70, (0.6, -8.0, 5.2), (0, 0, 4.4), 44, 0.5, None),
  (30.70, 31.60, (TX, -3.5, 3.6), (TX, 8, 4.4), 54, 0.0, None),
- (31.60, 32.38, (6, -9.5, 3.8), (6, -4, 0.4), 46, 0.6, None),
+ (31.60, 32.38, (2.2, -10.5, 5.4), (1.0, -1.6, 3.9), 46, 0.6, None),
  (32.38, 33.70, (1.8, -11.5, 6.6), (1.8, 0, 4.2), 50, 0.9, None),
  (33.70, 34.40, (3.5, -5.2, 5.0), (3.5, 0.3, 4.7), 36, 0.5, None),
  (34.40, 36.40, (1.4, -12.5, 7.2), (1.2, 0, 4.0), 58, 1.4, None),
@@ -480,11 +485,21 @@ def update(scene, depsgraph=None):
         FISH2.rotation_euler = (0, 0, R(-10))
     else: hide(FISH2)
     # ice cream / jug
-    if 5.0 <= t < 6.03: IC.scale = (1, 1, 1)
+    if 5.0 <= t < 6.03:
+        IC.scale = (1, 1, 1); IC.location = (0.38, -1.15, 1.95)
+        if t >= 5.62: ICBALL.scale = (0.4, 0.4, 0.33); ICBALL.location = (0.04, 0.05, 0.5)
+        else: ICBALL.scale = (0.48, 0.48, 0.45); ICBALL.location = (0, 0, 0.6)
     else: hide_local(IC)
+    hide_local(JUG)
     if 8.62 <= t < 9.87:
-        JUG.scale = (1, 1, 1); JUG.rotation_euler = (0, R(12 + 6 * math.sin(t * 20)), 0)
-    else: hide_local(JUG)
+        bpy.context.view_layer.update(); hmw = LILY.head.matrix_world
+        bim = LILY.body.matrix_world.inverted()
+        mouth = bim @ (hmw @ Vector((0, -0.66, 0.40)))
+        d = Vector((0.32, -0.42, 0.85)).normalized()
+        BOT.location = mouth - d * 0.02 + Vector((0, 0, 0.0)); BOT.scale = (1, 1, 1)
+        BOT.rotation_euler = d.to_track_quat('Z', 'Y').to_euler()
+        BOT.rotation_euler.x += R(3) * math.sin(t * 18)
+    else: hide_local(BOT)
     # ---- Mia ----
     pv, face, hz = eval_tl(MIA_TL, t)
     ex = {'bob': 0.06 * math.sin(t * 2 * math.pi * 1.1)}
@@ -578,10 +593,17 @@ def update(scene, depsgraph=None):
         # carried on Mia's shoulder (horizontal)
         BONE.location = Vector(MIA.root.location) + Vector((1.2, 0, 4.9)); BONE.rotation_euler = (0, R(90), 0); BONE.scale = (0.75,) * 3
     elif t < 32.38:
-        dt = t - 31.6; z = max(0.35, 6 - 0.5 * 78 * dt * dt); bounce = 0
-        if z <= 0.35:
-            tl_ = dt - math.sqrt(2 * 5.65 / 78); bounce = max(0, 3.0 * tl_ - 0.5 * 78 * tl_ * tl_)
-        BONE.location = (6, -4, z + bounce); BONE.rotation_euler = (0, R(90), R(25) + dt * 2); BONE.scale = (0.35,) * 3
+        if t < 31.72: hide(BONE)
+        else:
+            dt = t - 31.72; T = 0.38
+            p0 = Vector((0.0, -0.9, 4.25)); p1 = Vector((1.9, -2.3, 3.12))
+            if dt < T:
+                k = dt / T; p = p0.lerp(p1, k); p.z += 1.3 * math.sin(math.pi * k)
+                BONE.rotation_euler = (R(20), R(90) + dt * 16, R(25))
+            else:
+                tb = dt - T; p = p1.copy(); p.z += max(0, 2.2 * tb - 0.5 * 30 * tb * tb)
+                BONE.rotation_euler = (0, R(90), R(25))
+            BONE.location = p; BONE.scale = (0.14,) * 3
     else: hide(BONE)
     # ---- FX ----
     puff_fx(t, EV_PUFFS)
