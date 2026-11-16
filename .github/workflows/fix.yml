@@ -7,9 +7,22 @@ on:
 permissions:
   contents: write
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      m: ${{ steps.m.outputs.m }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: m
+        run: echo "m=$(tr -d ' \n' < fix.txt)" >> $GITHUB_OUTPUT
   render:
+    needs: setup
     runs-on: ubuntu-latest
     timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        chunk: ${{ fromJSON(needs.setup.outputs.m) }}
     steps:
       - uses: actions/checkout@v4
       - name: Blender
@@ -22,11 +35,25 @@ jobs:
           HQ_W: '1080'
           HQ_H: '1920'
           HQ_DENOISE: '1'
-          GH_TOKEN: ${{ github.token }}
         run: |
           export HQ_SAMPLES=$(cat samples.txt)
-          C=$(tr -dc 0-9 < fix.txt)
+          C=${{ matrix.chunk }}
           A=$((C*55)); B=$((A+54)); [ $B -gt 1091 ] && B=1091
           ./bl/blender -b --factory-startup --python build.py -- frames out $A $B 2>&1 | grep -E "FRAME|Error|Traceback|rror" || true
           ffmpeg -v error -framerate 30 -start_number $A -i out/f_%04d.png -frames:v $((B-A+1)) -c:v libx264 -preset slow -crf 12 -pix_fmt yuv420p chunk_$(printf %02d $C).mp4
-          gh release create fix-${{ github.run_id }} chunk_*.mp4 --repo ${{ github.repository }} --title "fix chunk $C" --notes "chunk fix"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunk-${{ matrix.chunk }}
+          path: chunk_*.mp4
+          retention-days: 3
+  publish:
+    needs: render
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: {path: dl, merge-multiple: true}
+      - env: {GH_TOKEN: '${{ github.token }}'}
+        run: |
+          ls -la dl
+          gh release create fix-${{ github.run_id }} dl/*.mp4 --repo ${{ github.repository }} --title "fix" --notes "chunks"

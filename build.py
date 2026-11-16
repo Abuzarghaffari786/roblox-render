@@ -235,7 +235,7 @@ def fish(name):
     prim('uv_sphere', name + '_p', mat('#111111'), r, (-1.6, -0.68, 0.3), (0.11, 0.11, 0.11), segments=12, ring_count=6)
     box(name + '_fin', (1.2, 0.1, 0.6), (0.2, 0, 1.0), mat('#6F7C88'), r)
     return r
-FISH = fish('fish'); FISH2 = fish('fish2')
+FISH = fish('fish'); FISH2 = fish('fish2'); FS = 0.55
 
 IC = empty('icecream', MIA.root)  # reparented below
 IC.parent = LILY.sh['armR']; IC.location = (0, -0.2, -2.45)
@@ -313,7 +313,8 @@ def hide_local(o): o.scale = (0.0001,) * 3
 P = {
  'idle':   dict(armL=(0, 0, 0), armR=(0, 0, 0), legL=(0, 0, 0), legR=(0, 0, 0), head=(0, 0, 0), body=(0, 0, 0)),
  'hold':   dict(armL=(R(-80), 0, R(8)), armR=(R(-80), 0, R(-8))),
- 'bite':   dict(armL=(R(-100), 0, R(14)), armR=(R(-100), 0, R(-14)), head=(R(-12), 0, 0), body=(R(-6), 0, 0)),
+ 'fishhold': dict(armL=(R(-62), 0, R(4)), armR=(R(-62), 0, R(-4))),
+ 'bite':   dict(armL=(R(-97), 0, R(4)), armR=(R(-97), 0, R(-4)), head=(R(-4), 0, 0), body=(R(-3), 0, 0)),
  'choke':  dict(armL=(R(-150), 0, R(38)), armR=(R(-150), 0, R(-38)), head=(R(14), 0, 0), body=(R(4), 0, 0)),
  'icecream': dict(armL=(R(-140), 0, R(35)), armR=(R(-158), 0, R(-22)), head=(R(-5), 0, 0)),
  'jug':    dict(armL=(R(-172), 0, R(10)), armR=(R(-172), 0, R(-10)), head=(R(28), 0, 0), body=(R(10), 0, 0)),
@@ -334,7 +335,7 @@ def pose_vals(name):
     d = dict(P['idle']); d.update(P[name]); return d
 
 # timelines: (time, pose, face, headturn_z)
-LILY_TL = [(0, 'hold', 'smile', 0), (0.90, 'bite', 'eat', 0), (2.20, 'choke', 'choke', 0), (4.30, 'choke', 'scared', 0),
+LILY_TL = [(0, 'fishhold', 'smile', 0), (0.90, 'bite', 'eat', 0), (2.20, 'choke', 'choke', 0), (4.30, 'choke', 'scared', 0),
     (5.15, 'icecream', 'determined', 0), (6.00, 'choke', 'choke', 0), (8.65, 'jug', 'determined', 0), (9.85, 'choke', 'choke', 0),
     (12.30, 'reach', 'shock', 0), (13.90, 'choke', 'choke', 0), (21.75, 'idle', 'scared', R(28)),
     (23.20, 'openwide', 'openwide', 0), (25.0, 'choke', 'choke', 0), (29.50, 'cough', 'shock', 0), (31.4, 'idle', 'smile', 0),
@@ -442,12 +443,12 @@ def puff_fx(t, events):
 # event times (word-keyed, from vo/words.json)
 EV_PUFFS = [
  (6.62, (TX, 7.2, 8.6), 1.4),          # ice cream hits bone
- (19.86, (KX, -0.5, 2.4), 0.75),        # "Tiny" shrink
  (26.80, (TX + 2.6, 6.8, 3.0), 1.0),   # "Not" chainsaw appears
  (32.36, (3.4, 0.2, 2.6), 1.6),        # "Mia" back to full size
  (34.55, (0.6, -2.0, 4.0), 1.5),       # "fish!" payoff
 ]
 
+MIA_PITCH = [0.0]
 def update(scene, depsgraph=None):
     f = scene.frame_current; t = f / FPS
     si = set_cam(t)
@@ -468,12 +469,14 @@ def update(scene, depsgraph=None):
     LILY.root.rotation_euler = (0, 0, R(90) if 23.15 <= t < 25.05 else 0)
     # ---- fish on table / in hands ----
     if t < 2.23:
-        k = ease_back((t - 0.83) / 0.14) if t > 0.83 else 0
-        FISH.location = (1.9 - 0.3 * k, -1.7 + 0.2 * k, 3.75 + 0.55 * k + 0.08 * math.sin(t * 25) * (k > 0)); FISH.scale = (1, 1, 1)
-        FISH.rotation_euler = (0, R(-8), R(-6))
-    else: hide(FISH)
+        k = min(1.0, ease_back((t - 0.83) / 0.14)) if t > 0.83 else 0
+        chomp = 0.06 * abs(math.sin(t * 2 * math.pi * 4)) if t > 0.97 else 0
+        FISH.parent = LILY.body
+        FISH.location = (0.15, -1.3 + 0.33 * k + chomp, 1.62 + 0.48 * k); FISH.scale = (FS,) * 3
+        FISH.rotation_euler = (0, R(-4) * k, 0)
+    else: FISH.parent = None; hide(FISH)
     if t >= 34.55:
-        k = min(1, (t - 34.55) / 0.14); FISH2.location = (0.6, -2.1, 3.85); FISH2.scale = (0.8 * k + 0.001,) * 3
+        k = min(1, (t - 34.55) / 0.14); FISH2.location = (0.6, -2.1, 3.62); FISH2.scale = (FS * k + 0.001,) * 3
         FISH2.rotation_euler = (0, 0, R(-10))
     else: hide(FISH2)
     # ice cream / jug
@@ -491,22 +494,38 @@ def update(scene, depsgraph=None):
         ex['armR'] = (R(-150) - R(28) * math.sin(t * 2 * math.pi * 3.1) - pv['armR'][0], 0, 0)
         ex['legL'] = (R(32) * math.sin(t * 2 * math.pi * 3.6), 0, 0); ex['legR'] = (-R(32) * math.sin(t * 2 * math.pi * 3.6), 0, 0)
         ex['head'] = (0, R(6) * math.sin(t * 50), 0)
-    if t < 19.86: msc = 1.0
+    if t < 19.45: msc = 1.0
     elif t < 21.75:
-        msc = 0.15
+        k = smooth((t - 19.45) / 0.75); msc = 1.0 - 0.85 * k
+        if t < 20.2: msc *= 1 + 0.06 * math.sin((t - 19.45) * 38) * (1 - k)
         if t >= 20.55:  # boing jump, gravity 78 (scaled)
             dt = t - 20.55; v0 = 78 * 0.33 * 0.5; z = max(0, v0 * dt - 0.5 * 78 * 0.33 * dt * dt)
             mloc = (KX, -0.5, z)
-        else: mloc = (KX, -0.5, 0)
+        else: mloc = (KX, -0.5 * min(1, (t - 19.45) / 0.75), 0)
     elif t < 25.05:
         msc = 0.15; base = Vector((2.4, -1.4, 3.08)); mrz = R(-60) if t < 23.15 else R(-100)
         if t < 23.15: mloc = tuple(base)
         else:
             base = Vector((2.9, -0.9, 3.08)); mouth = Vector((0.75, -0.05, 4.45))
             if t < 23.75: mloc = tuple(base)
-            elif t < 24.35:
-                k = (t - 23.75) / 0.6; p = base.lerp(mouth, k); p.z += 1.6 * math.sin(math.pi * k); mloc = tuple(p)
-                msc = 0.15 * (1 - 0.6 * max(0, k - 0.75) / 0.25)
+            elif t < 24.45:
+                k = smooth((t - 23.75) / 0.7)
+                msc = 0.15 - 0.04 * k; Hh = 6.0 * msc
+                bpy.context.view_layer.update(); hm = LILY.head.matrix_world
+                mouth = hm @ Vector((0, -0.64, 0.40)); inward = (hm @ Vector((0, 0.2, 0.40)) - mouth).normalized()
+                inside = mouth + inward * (Hh + 0.05)
+                start_head = base + Vector((0, 0, Hh))
+                if k < 0.7:
+                    q = k / 0.7; hp = start_head.lerp(mouth - inward * 0.25, q); hp.z += 0.55 * math.sin(math.pi * q)
+                else:
+                    q = (k - 0.7) / 0.3; hp = (mouth - inward * 0.25).lerp(inside, q)
+                pitch = R(-90) * smooth(min(1, k / 0.55))
+                # feet (root) trail behind head along body axis
+                axis = Vector((-math.sin(-pitch), 0, math.cos(pitch)))
+                root = hp - axis * Hh
+                mloc = tuple(root); mrz = 0
+                MIA_PITCH[0] = pitch
+                ex['armL'] = (R(-175) - pv['armL'][0], 0, 0); ex['armR'] = (R(-175) - pv['armR'][0], 0, 0)
             else: mloc = (0, 0, -500)
     elif t < 32.36:
         # throat
@@ -526,7 +545,7 @@ def update(scene, depsgraph=None):
         mrz = mrz if t >= 30.7 else R(-35)
     else:
         mloc = (3.6, 0.4, 0); mrz = R(-15)
-    MIA.root.location = mloc; MIA.root.scale = (msc,) * 3; MIA.root.rotation_euler = (0, 0, mrz)
+    MIA.root.location = mloc; MIA.root.scale = (msc,) * 3; MIA.root.rotation_euler = (0, MIA_PITCH[0], mrz); MIA_PITCH[0] = 0
     apply(MIA, pv, hz, ex); MIA.set_face(face)
     # Mia props
     if 13.9 <= t < 14.68: CHK.scale = (1, 1, 1); CHK.parent = MIA.body; CHK.location = (0, -1.6, 0.6)
@@ -578,10 +597,11 @@ def update(scene, depsgraph=None):
             o.scale = (0.3, 0.3, 0.55)
         else: hide(o)
     for i, o in enumerate(ZAP):
-        if 18.25 <= t < 20.1:
-            c = Vector((KX, -0.4, 0)) + Vector((rnd.uniform(-2.2, 2.2), rnd.uniform(-1.0, 0.2), rnd.uniform(0.2, 6.2)))
+        if 18.25 <= t < 20.25:
+            ms = MIA.root.scale[0]
+            c = Vector((KX, -0.4, 0)) + Vector((rnd.uniform(-2.2, 2.2), rnd.uniform(-1.0, 0.2), rnd.uniform(0.2, 6.2))) * ms
             o.location = c; o.rotation_euler = (rnd.uniform(0, 6.3), rnd.uniform(0, 6.3), rnd.uniform(0, 6.3))
-            o.scale = (0.08, 0.08, rnd.uniform(0.6, 1.6))
+            o.scale = (0.08 * ms, 0.08 * ms, rnd.uniform(0.6, 1.6) * ms)
         else: hide(o)
     for i, o in enumerate(SPARK):
         if 27.05 <= t < 30.1:
